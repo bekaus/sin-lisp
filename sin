@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+import re
+import sys
+
+def read(sexpr):
+    grammar = r"(\()|(\))|([^()\s]+)|(\s+)"
+    number = r"\d+\.?\d*\Z"
+
+    def sequenceBuilder(match):
+        leftbracket, rightbracket, atom, whitespace = match.groups()
+        if(leftbracket): return '['
+        elif(rightbracket): return ']'
+        elif(atom): 
+            if(re.match(number, atom)): return atom 
+            else: return '"' + atom + '"'
+        elif(whitespace): return ','
+    return eval(re.sub(grammar, sequenceBuilder, sexpr), None, None)
+
+def set(rest, env):
+    globalScope[interpret(rest[0], env)] = interpret(rest[1], env)
+    return globalScope[rest[0]]
+
+def cond(rest, env):
+    if(interpret(rest[0], env) == True): return interpret(rest[1], env)
+    else: return interpret(rest[2], env)
+
+def cons(rest, env):
+    newList = [interpret(rest[0],env), ]
+    newList.extend(interpret(rest[1], env))
+    return newList
+
+specialForms = {
+    "set": set,
+    "first": lambda rest, env: interpret(rest[0], env)[0],
+    "rest": lambda rest, env: interpret(rest[0], env)[1:],
+    "cons": cons,
+    "quote": lambda rest, env: rest,
+    "eq": lambda rest, env: interpret(rest[0], env) == interpret(rest[1], env),
+    "cond": cond,
+    "+": lambda rest, env: float(interpret(rest[0], env)) + float(interpret(rest[1], env)),
+    "-": lambda rest, env: float(interpret(rest[0], env)) - float(interpret(rest[1], env)),
+    "*": lambda rest, env: float(interpret(rest[0], env)) * float(interpret(rest[1], env)),
+    "/": lambda rest, env: float(interpret(rest[0], env)) / float(interpret(rest[1], env))
+}
+
+globalScope = {}
+def interpret(tree, env=globalScope):
+    if(type(tree) == list):
+        if(tree[0] in specialForms):
+            return specialForms.get(tree[0])(tree[1:], env)
+        else:
+            newScope = dict(env)
+            newScope.update(dict(zip(env[tree[0]][0], map(lambda x: interpret(x, env), tree[1:]))))
+            return interpret(env[tree[0]][1], newScope)
+    else:
+        if tree in env:
+            return interpret(env[tree], env)
+        return tree
+
+def rep(sexpr):
+    print interpret(read(sexpr))
+
+def repl():
+    while(True):
+        print "sin> ",
+        sys.stdout.flush()
+        line = sys.stdin.readline().lstrip(">").strip() 
+        try:
+            rep(line)
+        except:
+            print "???"
+
+if __name__ == "__main__":
+    if(len(sys.argv) == 2):
+        f = open(sys.argv[1])
+        for line in f:
+            print line.strip() + " -> ",
+            rep(line.strip())
+    else:
+        repl()
+
+"""
+e1 = "(+ 1 2)"
+e2 = "(set var content)"
+e3 = "(set inc (quote (x) (+ x (+ 0.5 0.5))))"
+e4 = "(inc 4)"
+
+factorial = "(set factorial (quote (x) (cond (eq x 1) 1 (* (factorial (- x 1)) x))))"
+fibonacci = "(set fib (quote (x) (cond (eq x 0) 1 (+ (fib (- x 1)) x))))"
+"""

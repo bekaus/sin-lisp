@@ -1,0 +1,8 @@
+(set inc (quote (x) (+ x 1)))
+(set fib (quote (x) (cond (eq x 0) 1 (+ (fib (- x 1)) x))))
+(set factorial (quote (x) (cond (eq x 1) 1 (* (factorial (- x 1)) x))))
+(set x 3)
+(factorial (inc x))
+(factorial (inc (inc x)))
+(fib 5)
+(fib 6)
