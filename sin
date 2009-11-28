@@ -72,6 +72,8 @@ def repl():
             print "???"
 
 if __name__ == "__main__":
+    print "This is sin-alpha. LISP interpreter."
+    print
     if(len(sys.argv) == 2):
         f = open(sys.argv[1])
         for line in f:
