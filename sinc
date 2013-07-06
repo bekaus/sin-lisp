@@ -7,7 +7,6 @@ errfile = "<sinc>"
 
 def read(sexpr):
     grammar = r"(\()|(\))|([^()\s]+)|(\s+)"
-    number = r"\d+\.?\d*\Z"
 
     def sequenceBuilder(match):
         leftbracket, rightbracket, atom, whitespace = match.groups()
@@ -17,34 +16,34 @@ def read(sexpr):
         elif(whitespace): return ','
     return eval(re.sub(grammar, sequenceBuilder, sexpr), None, None)
 
-def set(rest, env):
+def set(rest):
     if(len(rest) == 2): # a variable
-        globalScope.append((comp(rest[0], env), comp(rest[1], env)))
+        globalScope.append((comp(rest[0]), comp(rest[1])))
     else: # a function
-        globalScope.append((comp(rest[0], env), "lambda " + comp(rest[1], env).strip("[]") +": " + comp(rest[2], env)))
+        globalScope.append((comp(rest[0]), "lambda " + comp(rest[1]).strip("[]") +": " + comp(rest[2])))
     return "None" 
 
 specialForms = {
     "set": set,
-    "first": lambda rest, env: "(" + comp(rest[0], env) + ")[0]",
-    "rest": lambda rest, env: "(" + comp(rest[0], env) + ")[1:]",
-    "cons": lambda rest, env: "[" + comp(rest[0],env)+"] + " + comp(rest[1], env),
-    "quote": lambda rest, env: "[" + ", ".join(map(lambda x: comp(x, env), rest)) + "]",
-    "eq": lambda rest, env: "("+comp(rest[0], env)+" == "+comp(rest[1], env)+")",
-    "cond": lambda rest, env: "("+comp(rest[1], env)+" if "+comp(rest[0], env)+" else "+comp(rest[2], env)+")",
-    "+": lambda rest, env: comp(rest[0], env)+" + "+comp(rest[1], env),
-    "-": lambda rest, env: comp(rest[0], env)+" - "+comp(rest[1], env),
-    "*": lambda rest, env: "("+comp(rest[0], env)+") * ("+comp(rest[1], env)+")",
-    "/": lambda rest, env: "("+comp(rest[0], env)+") / ("+comp(rest[1], env)+")"
+    "first": lambda rest: "(" + comp(rest[0]) + ")[0]",
+    "rest": lambda rest: "(" + comp(rest[0]) + ")[1:]",
+    "cons": lambda rest: "[" + comp(rest[0])+"] + " + comp(rest[1]),
+    "quote": lambda rest: "[" + ", ".join(map(lambda x: comp(x), rest)) + "]",
+    "eq": lambda rest: "("+comp(rest[0])+" == "+comp(rest[1])+")",
+    "cond": lambda rest: "("+comp(rest[1])+" if "+comp(rest[0])+" else "+comp(rest[2])+")",
+    "+": lambda rest: comp(rest[0])+" + "+comp(rest[1]),
+    "-": lambda rest: comp(rest[0])+" - "+comp(rest[1]),
+    "*": lambda rest: "("+comp(rest[0])+") * ("+comp(rest[1])+")",
+    "/": lambda rest: "("+comp(rest[0])+") / ("+comp(rest[1])+")"
 }
 
 globalScope = []
-def comp(tree, env=globalScope):
+def comp(tree):
     if(type(tree) == list):
         if(tree[0] in specialForms):
-            return specialForms.get(tree[0])(tree[1:], env)
+            return specialForms.get(tree[0])(tree[1:])
         else:
-            args = map(lambda x: comp(x, env), tree[1:])
+            args = map(lambda x: comp(x), tree[1:])
             return tree[0] + "(" + ",".join(args) + ")"
     else:
         return tree
@@ -63,7 +62,6 @@ def transcribe(sexpr):
     for expr in globalScope:
         initCode.append(str(expr[0]) + " = " + str(expr[1]) + "\n")
     return "".join(initCode) + transcript
-
 
 def sinc(sexpr):
     transcript = transcribe(sexpr)
@@ -86,7 +84,7 @@ if __name__ == "__main__":
         f.close()
 
     else:
-        print "This is sin-alpha. Interactice LISP to Python compiler."
+        print "This is sinC-alpha. Interactice LISP to Python compiler."
         print
         repl()
 

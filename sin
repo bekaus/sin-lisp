@@ -81,13 +81,3 @@ if __name__ == "__main__":
             rep(line.strip())
     else:
         repl()
-
-"""
-e1 = "(+ 1 2)"
-e2 = "(set var content)"
-e3 = "(set inc (quote (x) (+ x (+ 0.5 0.5))))"
-e4 = "(inc 4)"
-
-factorial = "(set factorial (quote (x) (cond (eq x 1) 1 (* (factorial (- x 1)) x))))"
-fibonacci = "(set fib (quote (x) (cond (eq x 0) 1 (+ (fib (- x 1)) x))))"
-"""
